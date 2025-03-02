@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -10,6 +10,7 @@ class Usage(Base):
     __tablename__ = 'usage'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(500))
     seconds: Mapped[int]
     date: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
