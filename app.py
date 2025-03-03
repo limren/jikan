@@ -6,14 +6,12 @@ import pywinctl as pwc
 from sqlalchemy import create_engine, insert, select, text
 from sqlalchemy.orm import sessionmaker
 
-from models import Application, Base, Usage
+from models import Application, Usage
+from config import engine, SessionLocal, Base
 
-engine = create_engine('mysql+mysqlconnector://user:password@127.0.0.1/jikan_db')
+# Base.metadata.create_all(engine)
 
-Base.metadata.create_all(engine)
-
-Session = sessionmaker(bind=engine)
-session = Session()
+session = SessionLocal()
 
 with engine.connect() as connection:
     # Étape 1: Lister les tables dans la base de données
@@ -53,7 +51,6 @@ def create_usage(app_id, usage_title, usage_seconds):
     return session.execute(stmt)
 
 def create_app(application_name):
-
     stmt = insert(Application).values(application_name=application_name)
 
     session.execute(stmt)
