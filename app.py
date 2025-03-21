@@ -8,36 +8,48 @@ from sqlalchemy.orm import sessionmaker
 
 from models import Application, Usage
 from config import engine, SessionLocal, Base
-
+import pandas as pd
 # Base.metadata.create_all(engine)
 
 session = SessionLocal()
 
-with engine.connect() as connection:
-    # Étape 1: Lister les tables dans la base de données
-    result = connection.execute(text("SHOW TABLES"))
-    tables = [row[0] for row in result]
 
-    print("Tables dans la base de données :")
-    for table in tables:
-        print(f"- {table}")
+# Récupérer les données sous forme de DataFrame
+applications_df = pd.read_sql(session.query(Application).statement, engine)
+usage_df = pd.read_sql(session.query(Usage).statement, engine)
 
-        # Étape 2: Lister les colonnes de chaque table
-        print(f"Colonnes de la table {table}:")
-        if table == "usage":
-            describe_result = connection.execute(text(f"DESCRIBE `usage`"))
-        else:
-            describe_result = connection.execute(text(f"DESCRIBE {table}"))
-        for column in describe_result:
-            print(f"  {column[0]} ({column[1]})")
+result = session.execute(text("SELECT count(*) FROM `usage`"))
+rows = result.fetchall()  # Récupère toutes les lignes
 
-        # Étape 3: Afficher les données de chaque table
-        print(f"Données de la table {table}:")
-        data_result = connection.execute(text(f"SELECT * FROM `{table}`"))
-        for row in data_result:
-            print(row)  # Affiche chaque ligne de la table
-
-        print("\n" + "-"*50 + "\n")
+for row in rows:
+    print(row)  # Affiche chaque ligne
+#
+#with engine.connect() as connection:
+#    # Étape 1: Lister les tables
+#    result = connection.execute(text("SHOW TABLES"))
+#    tables = [row[0] for row in result.fetchall()]
+#
+#    print("Tables dans la base de données :")
+#    for table in tables:
+#        print(f"\n- {table}")
+#
+#        # Étape 2: Lister les colonnes
+#        describe_result = connection.execute(text(f"DESCRIBE `{table}`")).fetchall()
+#        columns = [col[0] for col in describe_result]
+#        print(f"Colonnes: {', '.join(columns)}")
+#
+#        # Étape 3: Récupérer les données
+#        data_result = connection.execute(text(f"SELECT * FROM `{table}`"))
+#        data = data_result.fetchall()
+#
+#        if data:
+#            df = pd.DataFrame(data, columns=columns)
+#            print(df.to_string(index=False))  # Affiche bien en tableau sans index
+#            df.to_csv(f"{table}_data.csv", index=False, encoding="utf-8")
+#        else:
+#            print("Aucune donnée dans cette table.")
+#
+#        print("\n" + "-" * 50 + "\n")
 
 app_windows_dict = {}
 
@@ -48,7 +60,8 @@ def get_app_by_name(app_name):
 
 def create_usage(app_id, usage_title, usage_seconds):
     stmt = insert(Usage).values(application_id=app_id, title=usage_title, seconds=usage_seconds)
-    return session.execute(stmt)
+    session.execute(stmt)
+    session.commit()
 
 def create_app(application_name):
     stmt = insert(Application).values(application_name=application_name)
@@ -71,8 +84,7 @@ def register_usages_per_app():
             app = create_app(app_name)
 
         for usage in usages:
-            res = create_usage(app.id, usage['title'], usage['seconds'])
-            print("res : ", res)
+            create_usage(app.id, usage['title'], usage['seconds'])
 
 
 atexit.register(register_usages_per_app)

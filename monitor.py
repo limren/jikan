@@ -4,11 +4,22 @@ from screeninfo import get_monitors
 
 from config import SessionLocal, engine
 from models import Application, Usage
+from datetime import datetime, timedelta
+
+start_of_day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+
+end_of_day = start_of_day + timedelta(days=1) - timedelta(microseconds=1)
 
 session = SessionLocal()
 
-print(session.query(Application).filter_by(application_name="discord").first())
+resId = session.query(Application).filter_by(application_name="chrome").first().id
+print(session.query(Application).filter_by(application_name="code").first().application_name)
 
+usagesTdy = session.query(Usage).filter_by(application_id=resId).all()
+# usages = session.query(Usage).filter_by(application_id=resId).all()
+print("usage tdy : ", usagesTdy)
+for usage in usagesTdy:
+    print(usage.title, usage.seconds, usage.date)
 
 
 
