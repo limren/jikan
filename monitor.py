@@ -15,9 +15,8 @@ session = SessionLocal()
 resId = session.query(Application).filter_by(application_name="chrome").first().id
 print(session.query(Application).filter_by(application_name="code").first().application_name)
 
-usagesTdy = session.query(Usage).filter_by(application_id=resId).all()
-# usages = session.query(Usage).filter_by(application_id=resId).all()
-print("usage tdy : ", usagesTdy)
+usagesTdy = session.query(Usage).all()
+
 for usage in usagesTdy:
     print(usage.title, usage.seconds, usage.date)
 

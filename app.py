@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from models import Application, Usage
 from config import engine, SessionLocal, Base
+from controllers import UsageController, ApplicationController
 import pandas as pd
 # Base.metadata.create_all(engine)
 
@@ -54,40 +55,8 @@ for row in rows:
 app_windows_dict = {}
 
 
-def get_app_by_name(app_name):
-    result = session.query(Application).filter_by(application_name=app_name).first()
-    return result
 
-def create_usage(app_id, usage_title, usage_seconds):
-    stmt = insert(Usage).values(application_id=app_id, title=usage_title, seconds=usage_seconds)
-    session.execute(stmt)
-    session.commit()
-
-def create_app(application_name):
-    stmt = insert(Application).values(application_name=application_name)
-
-    session.execute(stmt)
-    session.commit()
-
-    app = session.execute(
-        select(Application).where(Application.application_name == application_name)
-    ).scalar_one()
-
-    return app
-
-def register_usages_per_app():
-    print(app_windows_dict)
-    for app_name, usages in app_windows_dict.items():
-        app = get_app_by_name(app_name)
-
-        if app is None:
-            app = create_app(app_name)
-
-        for usage in usages:
-            create_usage(app.id, usage['title'], usage['seconds'])
-
-
-atexit.register(register_usages_per_app)
+atexit.register(lambda: UsageController.register_usages_per_app(app_dictionary=app_windows_dict))
 
 while True:
     active_window = pwc.getActiveWindow()
